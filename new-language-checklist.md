@@ -4,7 +4,7 @@
 + [ ] What types of programming is your language primarily used for (ex: web sites, video games, mobile devices, parsing, etc.)? 
 + [ ] If your language is multi-purpose, provide some examples of different projects it's been used for.
 
-## 2. Hello World
+## 2. Hello, World!
 + [ ] What did you need to do to install the language?
 + [ ] Does this language come with a recommended programming environment? What is it?  If not, how did you pick the one that you'll be using?
 + [ ] How do you run "Hello, World!" program in that language?
