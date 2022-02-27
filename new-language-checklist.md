@@ -9,3 +9,6 @@
 + [ ] Does this language come with a recommended programming environment? What is it?  If not, how did you pick the one that you'll be using?
 + [ ] How do you run "Hello, World!" program in that language?
 + [ ] How do you write comments in your language?
+
+## 3. Learning Resources
++ [ ]  Where will you get information about this language when it's time to start programming in it? Provide a list of the names of books, website URLs, or any other resources that relate to your language in particular.
