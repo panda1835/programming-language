@@ -65,7 +65,7 @@ def java_term_check(test_string):
 
 def java_expression_check(test_string):
   """
-  replace an expression with an E
+  replace an expression with an E 
   """
 
   test_string = java_term_check(test_string)
