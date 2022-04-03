@@ -11,7 +11,7 @@ def main(file_name):
     print()
 
     # replace special character by itself with padding spaces
-    a = ['=', '\(', '\)', '{', '}']
+    a = ['=', '\(', '\)', '{', '}', ';']
     for i in a:
         program = re.sub(f"{i}", " "+i.replace('\\', '')+" ", program)
 
@@ -50,7 +50,7 @@ def main(file_name):
 
     # replace import
     # Import ::=_IMPORT_ [a-zA-Z](.[a-zA-Z]+)*(\.\*)?
-    program = re.sub(r" _IMPORT_ [a-zA-Z](.[a-zA-Z]+)*(\.\*)?;", " _IMPORT_ ", program)
+    program = re.sub(r" _IMPORT_ [a-zA-Z](.[a-zA-Z]+)*(\.\*)? ;", " _IMPORT_ ", program)
 
     # replace the class def
     # ClassDef ::=_CLASS_ [A-Z][a-zA-Z]*
@@ -99,8 +99,8 @@ def main(file_name):
     program = re.sub(r" [a-z][a-zA-Z0-9_$]* ", " _X_ ", program)
 
     # replace the term
-    # Term ::= _(X|N)_
-    program = re.sub(r"_(X|N)_", " _T_ ", program)
+    # Term ::= _(Identifier|Number|<String>)_
+    program = re.sub(r"_(X|N|s)_", " _T_ ", program)
 
     #get rid of double spaces 
     program = re.sub(r"\s+"," ",program)
@@ -112,18 +112,30 @@ def main(file_name):
     program = re.sub(r"\s+"," ",program)
 
     # replace the expression
-    # Expression ::= = _T_ (_AOP_ _T_ )*
+    # Expression ::= = Term (AOp Term )* 
     program = re.sub(r" = _T_ (_AOP_ _T_ )*", " = _E_ ", program)
 
     #get rid of double spaces 
     program = re.sub(r"\s+"," ",program)
 
-    # replace the variable declaration
-    # VarDecl ::= Primitive Identifier (= Expression)?
-    program = re.sub(r" _PRIMITIVE_ _I_ (= _E_)? ;", " _VARDECL_ ", program)
+    #replace the output
+    #Output ::=  _PRINT_ ( _s_ | _X_ )
+    program = re.sub(r"_PRINT_ \(( _s_ | _T_ )\) ;", " _O_ ", program)
 
     #get rid of double spaces 
     program = re.sub(r"\s+"," ",program)
+
+    # replace the variable declaration
+    # VarDecl ::= Primitive|String Identifier (= Expression)?
+    program = re.sub(r" (_PRIMITIVE_|_STRING_) _I_ (= _E_)? ;", " _VARDECL_ ", program)
+
+    #get rid of double spaces 
+    program = re.sub(r"\s+"," ",program)
+
+    # replace the statement
+    # Statement ::= Identifier = Expression | Loop | Select | Output
+    # program = re.sub(r"( _I_ = _E_ | _LOOP_ | _SELECT_ | _O_ )", " _S_ ", program)
+    program = re.sub(r"(_I_ = _E_ ;|_LOOP_|_O_)", "_S_", program)
 
     # replace the conditional operator
     # COp ::= (>=|<=|>|<|!=|==)
@@ -134,54 +146,44 @@ def main(file_name):
     program = re.sub(r"(&&|\|\|)"," _LOP_ ",program)
 
     #get rid of double spaces 
-    program = re.sub("\s+"," ",program)
+    program = re.sub(r"\s+"," ",program)
 
     # replace the conditional statement
-    # CS ::= _E_ _COP_ _E_ (_LOP_ _E_ _COP_ _E_)*
-    program = re.sub(" _E_ _COP_ _E_ (_LOP_ _E_ _COP_ _E_ )* "," _CS_ ",program)
+    # CS ::= (Expression|Term) COp (Expression|Term) (LOp (Expression|Term) COp (Expression|Term))*
+    program = re.sub(r" _(E|T)_ _COP_ _(E|T)_ (_LOP_ _(E|T)_ _COP_ _(E|T)_ )*"," _CS_ ",program)
 
     #get rid of double spaces 
-    program = re.sub("\s+"," ",program)
-
-    # replace the loop
-    # Loop ::= if (CS) {Block}( else {Block})?
-    program = re.sub(r" _IF_ \( _CS_ \) { _CB_ }( _ELSE_ { _CB_ })? ", " _LOOP_ ", program)
-
-    # replace the select
-    # Select ::= 
-    # program = re.sub(r"", " _SELECT_ ", program)
-
-    #get rid of double spaces 
-    program = re.sub("\s+"," ",program)
-
-    #replace the output
-    #Output ::=  _PRINT_ ( _s_ | _X_ )
-    program = re.sub(r"_PRINT_ \(( _s_ | _T_ )\) ;", " _O_ ", program)
-
-    #get rid of double spaces 
-    program = re.sub("\s+"," ",program)
-
-    # replace the statement
-    # Statement ::= Identifier = Expression | Loop | Select | Output
-    # program = re.sub(r"( _I_ = _E_ | _LOOP_ | _SELECT_ | _O_ )", " _S_ ", program)
-    program = re.sub(r"(_I_ = _E_|_LOOP_|_O_)", "_S_", program)
-
-    #get rid of double spaces 
-    program = re.sub("\s+"," ",program)
+    program = re.sub(r"\s+"," ",program)
 
     # replace block statement
     # BlockStatement ::= (VarDecl | Statement)*
     program = re.sub(r"(_VARDECL_|_S_)", "_BLOCKSTATEMENT_", program)
 
+    # replace the if
+    # Select ::= if (CS) {Block}( else {Block})?
+    program = re.sub(r" _IF_ \( _CS_ \) \{( _BLOCKSTATEMENT_ )+\}( _ELSE_ \{( _BLOCKSTATEMENT_ )+\})? ", " _SELECT_ ", program)
+
+    # replace block statement with if
+    # BlockStatement ::= (BlockStatement | Select)*
+    program = re.sub(r"(_BLOCKSTATEMENT_|_SELECT_)", "_BLOCKSTATEMENT_", program)
+
+    # replace the while loop
+    # WhileLoop ::= while (CS) {BlockStatement}?
+    program = re.sub(r" _WHILE_ \( _CS_ \) \{( _BLOCKSTATEMENT_)+ \} ", " _WHILELOOP_ ", program)
+
+    # replace block statement with while
+    # BlockStatement ::= (VarDecl | Statement | IfLoop)*
+    program = re.sub(r"(_BLOCKSTATEMENT_|_WHILELOOP_)", "_BLOCKSTATEMENT_", program)
+
     #get rid of double spaces 
-    program = re.sub("\s+"," ",program)
+    program = re.sub(r"\s+"," ",program)
 
     # replace block statements
     # BlockStatements ::= BlockStatement*
     program = re.sub(r"( _BLOCKSTATEMENT_)+", " _BLOCKSTATEMENTS_", program)
 
     # get rid of double spaces 
-    program = re.sub("\s+"," ",program)
+    program = re.sub(r"\s+"," ",program)
 
     # replace block
     # Block ::= BlockStatement?
@@ -192,7 +194,7 @@ def main(file_name):
     # program = re.sub(r"( _STATICINIT_ | _STATICMETHOD_ )+", " _STATICMETHOD_ ")
 
     # get rid of double spaces 
-    program = re.sub("\s+"," ",program)
+    program = re.sub(r"\s+"," ",program)
 
     # replace static initializer
     # StaticInit ::= MainHeader { Block }
@@ -213,15 +215,13 @@ def main(file_name):
     program = re.sub(r" (_IMPORT_)? (_CLASSDECL_)", '_P_', program)
 
     
-    # #you can instead substitute extra (one or more) spaces for a single space
-    # # if this suits your plan
-    # program = re.sub("\s+"," ",program)
-    # print(program)
+    #you can instead substitute extra (one or more) spaces for a single space
+    # if this suits your plan
+    program = re.sub("(\s+|\\n)","",program)
 
     return program
 
 
-assert main("testC.java").replace('\n', '').replace(' ','') == "_P_", print("Error in C-level")
-
-print(main("testB.java"))
+assert main("testC.java").replace('\n', '') == "_P_", print("Error in C-level:", main("testC.java"), "\n")
+assert main("testB.java").replace('\n', '') == "_P_", print("Error in B-level:", main("testB.java"), "\n")
     
